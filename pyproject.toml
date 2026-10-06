@@ -1,0 +1,24 @@
+[project]
+name = "tabpfn-hackathon"
+version = "0.1.0"
+description = "TabPFN-3.5 as a behavior-cloned policy for MuJoCo and Atari control (Prior Labs TabPFN-3.5 Hackathon submission)"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+dependencies = [
+    "ale-py>=0.10.1",
+    "gym>=0.26.2",
+    "gymnasium[atari,mujoco]>=1.3.0",
+    "huggingface-sb3>=3.0",
+    "matplotlib>=3.11.1",
+    "numpy>=2.5.2",
+    "opencv-python-headless>=4.10.0",
+    "pillow>=12.3.0",
+    "python-dotenv>=1.2.3",
+    "rich>=13.7.0",
+    "shimmy>=0.2.1",
+    "stable-baselines3>=2.9.0",
+    "tabpfn>=8.5.0",
+    "torch>=2.13.0",
+    "tqdm>=4.70.0",
+]
