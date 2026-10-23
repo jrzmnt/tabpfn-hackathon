@@ -3,23 +3,44 @@ fit one TabPFNRegressor per action dimension on a context of (state, action)
 pairs from the PPO expert, then evaluate on held-out states via batched
 in-context prediction (see README for why batched, not step-by-step
 rollout, is how we evaluate this).
+
+    uv run python scripts/tabpfn_bc.py --env halfcheetah
+    uv run python scripts/tabpfn_bc.py --env hopper
 """
+import argparse
+import os
 import time
+from pathlib import Path
+
+# Avoids rebuilding the transformer from scratch on every TabPFNRegressor()
+# instantiation below (we create one per action dimension, all loading the
+# same "V3.5 Fast" checkpoint) -- must be set before any TabPFN model load.
+# See README's "One TabPFNRegressor per action dimension" note. ~30% faster
+# in our measurements.
+os.environ.setdefault("TABPFN_MODEL_CACHE_SIZE", "1")
+
 import numpy as np
+from dotenv import load_dotenv
 from sklearn.metrics import r2_score, mean_squared_error
 from tabpfn import TabPFNRegressor
 from tabpfn.constants import ModelVersion
+
+from envs import ENVIRONMENTS
+
+load_dotenv()
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 N_CONTEXT = 1000
 N_TEST = 2000
 SEED = 0
 
 
-def main():
-    data = np.load("demos_halfcheetah.npz")
+def main(env_key):
+    data = np.load(DATA_DIR / f"demos_{env_key}.npz")
     states, actions = data["states"], data["actions"]
     n_dims = actions.shape[1]
-    print(f"total transitions: {len(states)}, action dims: {n_dims}")
+    print(f"[{env_key}] total transitions: {len(states)}, action dims: {n_dims}")
 
     rng = np.random.default_rng(SEED)
     perm = rng.permutation(len(states))
@@ -57,8 +78,9 @@ def main():
     print(f"\nmean R2 across dims: {np.mean(r2s):.3f}")
     print(f"mean MSE across dims: {np.mean(mses):.4f}")
 
+    out_path = DATA_DIR / f"tabpfn_bc_results_{env_key}.npz"
     np.savez(
-        "tabpfn_bc_results.npz",
+        out_path,
         y_test=y_test,
         preds=preds,
         r2s=r2s,
@@ -68,8 +90,12 @@ def main():
         n_context=N_CONTEXT,
         n_test=N_TEST,
     )
-    print("saved tabpfn_bc_results.npz")
+    print(f"saved {out_path}")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--env", choices=sorted(ENVIRONMENTS), default="halfcheetah",
+                         help="which MuJoCo environment's demos to evaluate")
+    args = parser.parse_args()
+    main(args.env)

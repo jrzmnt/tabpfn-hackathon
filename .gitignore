@@ -1,3 +1,25 @@
+# macOS
+.DS_Store
+
+# Reproducible via collect_demos.py / collect_all.sh. The MuJoCo demos for
+# the four headline environments are small (<2MB each) and ARE committed so
+# the main results run without re-collecting; the rest stay ignored.
+data/demos_*.npz
+!data/demos_invertedpendulum.npz
+!data/demos_halfcheetah.npz
+!data/demos_hopper.npz
+!data/demos_swimmer.npz
+
+# Same idea for the Atari extension -- these are much bigger (up to ~225MB,
+# since each transition stores a 512-dim CNN embedding) and 100% reproducible
+# via collect_atari_demos.py / run_atari_experiments.sh.
+data/atari_demos_*.npz
+
+# Intermediate artifact consumed by split_and_render_gifs.py and never
+# referenced directly -- only the split random_/expert_/tabpfn_bc_*.gif
+# files are. Regenerate with record_comparison_video.py if needed.
+media/comparison_*.gif
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
